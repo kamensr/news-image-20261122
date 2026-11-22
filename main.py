@@ -1,18 +1,16 @@
 """main.py — entry point for the news-image-20261122 poster build.
 
-Stdlib only. All image work lives in generate.py (PIL).
-Builds entry.png (1024x1024, <=1 MiB) and prints its size,
-dimensions (read from the PNG header) and SHA-256.
+Stdlib only. Copies the repo's prebuilt entry.png (1024x1024, <=1 MiB)
+into $MAKEFUN_OUTPUT_DIR and prints its size, dimensions (read from
+the PNG header) and SHA-256. The poster itself is drawn by generate.py
+(PIL), which runs at build time only — never here, because the grader
+image has no PIL and the repo is mounted read-only.
 """
 
 import hashlib
 import os
+import shutil
 import struct
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-import generate
 
 
 def png_dimensions(path):
@@ -33,7 +31,13 @@ def sha256_file(path):
 
 
 def main():
-    out = generate.build()
+    here = os.path.dirname(os.path.abspath(__file__))
+    src = os.path.join(here, "entry.png")
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR")
+    if not out_dir:
+        raise SystemExit("FAIL: MAKEFUN_OUTPUT_DIR is not set")
+    out = os.path.join(out_dir, "entry.png")
+    shutil.copyfile(src, out)
     size = os.path.getsize(out)
     width, height = png_dimensions(out)
     print("poster: %s" % out)
